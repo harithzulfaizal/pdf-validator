@@ -31,6 +31,7 @@ export default function SimilarityChecker({
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [editedFileName, setEditedFileName] = useState('');
   const [processing, setProcessing] = useState(true);
+  const [isGeneratingZip, setIsGeneratingZip] = useState(false);
 
   useEffect(() => {
     const results: SimilarityResult[] = processedFiles.map((file) => {
@@ -83,7 +84,9 @@ export default function SimilarityChecker({
     } else {
       // All done: generate report and zip renamed PDFs
       generateExcelReport(updated);
+      setIsGeneratingZip(true);
       await generateZip(updated);
+      setIsGeneratingZip(false);
       onSimilarityChecked(updated);
     }
   };
@@ -134,6 +137,15 @@ export default function SimilarityChecker({
 
   if (processing || similarityResults.length === 0) {
     return <div className="text-center">Processing similarity...</div>;
+  }
+
+  if (isGeneratingZip) {
+    return (
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
+        <div>Generating zip file, please wait...</div>
+      </div>
+    );
   }
 
   const current = similarityResults[currentFileIndex]!;
@@ -208,7 +220,7 @@ export default function SimilarityChecker({
         onClick={handleConfirmFileName}
         className="w-full py-3 px-6 bg-purple-700 rounded-lg font-bold hover:bg-purple-600 transition-colors"
       >
-        {currentFileIndex < similarityResults.length - 1 ? 'Confirm & Next' : 'Finish & Download Report'}
+        {currentFileIndex < similarityResults.length - 1 ? 'Confirm & Next' : 'Download Files and Report'}
       </button>
     </div>
   );
