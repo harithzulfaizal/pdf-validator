@@ -46,3 +46,5 @@ yarn-error.log*
 .idea
 
 /data
+**/src_list.json
+**/master_list.json

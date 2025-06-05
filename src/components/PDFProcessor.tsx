@@ -32,7 +32,7 @@ export default function PDFProcessor({ files, onProcessingComplete }: PDFProcess
         try {
           // Read the PDF file
           const arrayBuffer = await file.arrayBuffer();
-          const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
           
           // Get the metadata
           const originalTitle = pdfDoc.getTitle() || '';

@@ -32,6 +32,8 @@ export default function SimilarityChecker({
   const [editedFileName, setEditedFileName] = useState('');
   const [processing, setProcessing] = useState(true);
   const [isGeneratingZip, setIsGeneratingZip] = useState(false);
+  const [excelFileName, setExcelFileName] = useState('similarity_results.xlsx');
+  const [zipFileName, setZipFileName] = useState('renamed_pdfs.zip');
 
   useEffect(() => {
     const results: SimilarityResult[] = processedFiles.map((file) => {
@@ -71,42 +73,36 @@ export default function SimilarityChecker({
 
   const handleConfirmFileName = async () => {
     const updated = [...similarityResults];
-    // Update final file name and metadata title
     updated[currentFileIndex]!.finalFileName = editedFileName;
     updated[currentFileIndex]!.newTitle = editedFileName;
 
     setSimilarityResults(updated);
 
-    // Do not automatically move to next file on confirm
     if (currentFileIndex === similarityResults.length - 1) {
-      // All done: generate report and zip renamed PDFs
-      generateExcelReport(updated);
+      generateExcelReport(updated, excelFileName);
       setIsGeneratingZip(true);
-      await generateZip(updated);
+      await generateZip(updated, zipFileName);
       setIsGeneratingZip(false);
       onSimilarityChecked(updated);
     }
   };
 
-  const generateZip = async (results: SimilarityResult[]) => {
+  const generateZip = async (results: SimilarityResult[], fileName: string) => {
     const zip = new JSZip();
     for (const r of results) {
       if (r.modifiedFile) {
         const arrayBuffer = await r.modifiedFile.arrayBuffer();
-        const pdfDoc = await PDFDocument.load(arrayBuffer);
+        const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
         pdfDoc.setTitle(r.newTitle);
-        // Update the PDF metadata title
-        // Removed invalid page.setTitle call
         const bytes = await pdfDoc.save();
         zip.file(`${r.finalFileName || r.newTitle}.pdf`, bytes);
       }
     }
     const zipBlob = await zip.generateAsync({ type: 'blob' });
-    const currentDate = new Date().toDateString();
-    saveAs(zipBlob, `renamed_pdfs_${currentDate}.zip`);
+    saveAs(zipBlob, fileName.endsWith('.zip') ? fileName : `${fileName}.zip`);
   };
 
-  const generateExcelReport = (results: SimilarityResult[]) => {
+  const generateExcelReport = (results: SimilarityResult[], fileName: string) => {
     const wsData: (string | number)[][] = [
       ['Original Filename', 'Original Metadata Title', 'New Filename', 'Selected Similar Files', 'All Similarity Scores'],
     ];
@@ -129,7 +125,7 @@ export default function SimilarityChecker({
     const blob = new Blob([buf], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
-    saveAs(blob, 'similarity_results.xlsx');
+    saveAs(blob, fileName.endsWith('.xlsx') ? fileName : `${fileName}.xlsx`);
   };
 
   if (processing || similarityResults.length === 0) {
@@ -149,6 +145,28 @@ export default function SimilarityChecker({
   return (
     <div className="w-full max-w-4xl">
       <h2 className="text-2xl font-bold mb-4">Filename Similarity Check</h2>
+      {/* Export filename inputs */}
+      <div className="flex gap-4 mb-4">
+        <div>
+          <label className="block text-sm mb-1">Excel Report Filename:</label>
+          <input
+            type="text"
+            value={excelFileName}
+            onChange={e => setExcelFileName(e.target.value)}
+            className="p-2 bg-gray-700 border border-gray-600 rounded text-white"
+          />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">ZIP Filename:</label>
+          <input
+            type="text"
+            value={zipFileName}
+            onChange={e => setZipFileName(e.target.value)}
+            className="p-2 bg-gray-700 border border-gray-600 rounded text-white"
+          />
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <p>File {currentFileIndex + 1} of {similarityResults.length}</p>
         <div className="flex gap-2">
