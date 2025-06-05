@@ -79,15 +79,19 @@ export default function PDFProcessor({ files, onProcessingComplete }: PDFProcess
   
   return (
     <div className="w-full max-w-4xl">
-      <h2 className="text-2xl font-bold mb-4">Processing PDF Files</h2>
+      {/* <h2 className="text-2xl font-bold mb-4">Processing PDF Files</h2> */}
       
-      <div className="w-full bg-gray-700 rounded-full h-4 mb-4">
+      {/* <div className="w-full bg-gray-700 rounded-full h-4 mb-4">
         <div 
           className="bg-purple-700 h-4 rounded-full transition-all duration-300" 
           style={{ width: `${progress}%` }}
         ></div>
-      </div>
+      </div> */}
       
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
+      </div>
+
       <p className="text-center">{processing ? `Processing... ${progress}%` : 'Processing complete!'}</p>
       
       {!processing && (

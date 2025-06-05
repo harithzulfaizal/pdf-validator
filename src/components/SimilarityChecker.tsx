@@ -77,11 +77,8 @@ export default function SimilarityChecker({
 
     setSimilarityResults(updated);
 
-    if (currentFileIndex < updated.length - 1) {
-      const nextIndex = currentFileIndex + 1;
-      setCurrentFileIndex(nextIndex);
-      setEditedFileName(updated[nextIndex]!.fileName.replace('.pdf', ''));
-    } else {
+    // Do not automatically move to next file on confirm
+    if (currentFileIndex === similarityResults.length - 1) {
       // All done: generate report and zip renamed PDFs
       generateExcelReport(updated);
       setIsGeneratingZip(true);
@@ -152,7 +149,54 @@ export default function SimilarityChecker({
   return (
     <div className="w-full max-w-4xl">
       <h2 className="text-2xl font-bold mb-4">Filename Similarity Check</h2>
-      <p className="mb-4">File {currentFileIndex + 1} of {similarityResults.length}</p>
+      <div className="flex items-center justify-between mb-4">
+        <p>File {currentFileIndex + 1} of {similarityResults.length}</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (currentFileIndex > 0) {
+                const prevIndex = currentFileIndex - 1;
+                setCurrentFileIndex(prevIndex);
+                setEditedFileName(similarityResults[prevIndex]!.fileName.replace('.pdf', ''));
+              }
+            }}
+            disabled={currentFileIndex === 0}
+            className={`p-2 rounded-lg transition-colors ${
+              currentFileIndex === 0
+                ? 'bg-gray-500 cursor-not-allowed'
+                : 'bg-purple-700 hover:bg-purple-600'
+            }`}
+            aria-label="Previous file"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (currentFileIndex < similarityResults.length - 1) {
+                const nextIndex = currentFileIndex + 1;
+                setCurrentFileIndex(nextIndex);
+                setEditedFileName(similarityResults[nextIndex]!.fileName.replace('.pdf', ''));
+              }
+            }}
+            disabled={currentFileIndex === similarityResults.length - 1}
+            className={`p-2 rounded-lg transition-colors ${
+              currentFileIndex === similarityResults.length - 1
+                ? 'bg-gray-500 cursor-not-allowed'
+                : 'bg-purple-700 hover:bg-purple-600'
+            }`}
+            aria-label="Next file"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
 
       <div className="bg-gray-800 p-6 rounded-xl mb-6">
         <h3 className="text-xl font-bold mb-2">Current File: {current.fileName}</h3>
@@ -218,9 +262,9 @@ export default function SimilarityChecker({
 
       <button
         onClick={handleConfirmFileName}
-        className="w-full py-3 px-6 bg-purple-700 rounded-lg font-bold hover:bg-purple-600 transition-colors"
+        className="w-full mt-4 py-3 px-6 bg-purple-700 rounded-lg font-bold hover:bg-purple-600 transition-colors"
       >
-        {currentFileIndex < similarityResults.length - 1 ? 'Confirm & Next' : 'Download Files and Report'}
+        {currentFileIndex === similarityResults.length - 1 ? 'Download Files and Report' : 'Confirm'}
       </button>
     </div>
   );
