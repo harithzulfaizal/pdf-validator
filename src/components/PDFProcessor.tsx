@@ -22,17 +22,20 @@ export default function PDFProcessor({ files, onProcessingComplete }: PDFProcess
   const [results, setResults] = useState<ProcessedResult[]>([]);
   
   useEffect(() => {
+    if (!processing || files.length === 0) return;
+    
     const processFiles = async () => {
       const processedResults: ProcessedResult[] = [];
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        if (!file) continue; // Extra safety for TS
         const fileName = file.name.replace('.pdf', '');
         
         try {
           // Read the PDF file
           const arrayBuffer = await file.arrayBuffer();
-            const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+          const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
           
           // Get the metadata
           const originalTitle = pdfDoc.getTitle() || '';
@@ -71,11 +74,12 @@ export default function PDFProcessor({ files, onProcessingComplete }: PDFProcess
       
       setResults(processedResults);
       setProcessing(false);
-      onProcessingComplete(processedResults);
+      // Removed automatic call to onProcessingComplete to prevent infinite loop
+      // onProcessingComplete(processedResults);
     };
     
     processFiles();
-  }, [files, onProcessingComplete]);
+  }, [files, processing]);
   
   return (
     <div className="w-full max-w-4xl">
@@ -99,13 +103,32 @@ export default function PDFProcessor({ files, onProcessingComplete }: PDFProcess
           <h3 className="text-xl font-bold mb-2">Processing Summary</h3>
           <div className="bg-gray-800 p-4 rounded-xl mb-4">
             <p>Total files processed: {results.length}</p>
-            <p>Files with metadata changes: {results.filter(r => r.originalTitle !== r.newTitle).length}</p>
-            <p>Files with errors: {results.filter(r => r.error).length}</p>
+            <p>Success: {results.filter(r => r.originalTitle !== r.newTitle).length}</p>
+            <p>Fail: {results.filter(r => r.error).length}</p>
+            {results.filter(r => r.error).length > 0 && (
+              <div className="mt-2">
+                <p className="font-semibold text-red-400">Files with errors:</p>
+                <ul className="list-disc list-inside text-red-300">
+                  {results.filter(r => r.error).map((r, idx) => (
+                    <li key={r.fileName}>
+                      <span className="font-semibold">{r.fileName}</span>
+                      {r.errorMessage && (
+                      <>
+                        <span className="mx-1">:</span>
+                        <span className="italic">{r.errorMessage}</span>
+                      </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
           
           <button
-            onClick={() => onProcessingComplete(results)}
+            onClick={() => onProcessingComplete(results.filter(r => !r.error))}
             className="w-full mt-4 py-3 px-6 bg-purple-700 rounded-lg font-bold hover:bg-purple-600 transition-colors"
+            disabled={results.filter(r => !r.error).length === 0}
           >
             Continue to Similarity Check
           </button>

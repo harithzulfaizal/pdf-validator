@@ -51,7 +51,7 @@ export default function SimilarityChecker({
     setSimilarityResults(results);
     setProcessing(false);
     if (results.length > 0) {
-      setEditedFileName(results[0]!.fileName.replace('.pdf', ''));
+      setEditedFileName(results[0]!.finalFileName);
     }
   }, [processedFiles, masterList]);
 
@@ -75,7 +75,6 @@ export default function SimilarityChecker({
     const updated = [...similarityResults];
     updated[currentFileIndex]!.finalFileName = editedFileName;
     updated[currentFileIndex]!.newTitle = editedFileName;
-
     setSimilarityResults(updated);
 
     if (currentFileIndex === similarityResults.length - 1) {
@@ -84,6 +83,11 @@ export default function SimilarityChecker({
       await generateZip(updated, zipFileName);
       setIsGeneratingZip(false);
       onSimilarityChecked(updated);
+    } else {
+      // Go to next file and set editedFileName to its finalFileName
+      const nextIndex = currentFileIndex + 1;
+      setCurrentFileIndex(nextIndex);
+      setEditedFileName(updated[nextIndex]!.finalFileName);
     }
   };
 
@@ -176,7 +180,7 @@ export default function SimilarityChecker({
               if (currentFileIndex > 0) {
                 const prevIndex = currentFileIndex - 1;
                 setCurrentFileIndex(prevIndex);
-                setEditedFileName(similarityResults[prevIndex]!.fileName.replace('.pdf', ''));
+                setEditedFileName(similarityResults[prevIndex]!.finalFileName);
               }
             }}
             disabled={currentFileIndex === 0}
@@ -198,7 +202,7 @@ export default function SimilarityChecker({
               if (currentFileIndex < similarityResults.length - 1) {
                 const nextIndex = currentFileIndex + 1;
                 setCurrentFileIndex(nextIndex);
-                setEditedFileName(similarityResults[nextIndex]!.fileName.replace('.pdf', ''));
+                setEditedFileName(similarityResults[nextIndex]!.finalFileName);
               }
             }}
             disabled={currentFileIndex === similarityResults.length - 1}
