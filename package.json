@@ -19,6 +19,7 @@
     "@t3-oss/env-nextjs": "^0.12.0",
     "file-saver": "^2.0.5",
     "fuzzball": "^2.2.2",
+    "jszip": "^3.10.1",
     "next": "^15.2.3",
     "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
